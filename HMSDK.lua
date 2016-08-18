@@ -89,7 +89,7 @@ end
 local function _register(account, password)
 	-- ====== 进入口 ======
 	local success = screen.safeTap(target["注册入口按钮"])
-	if not success then return false,"Can not find RegisterAccountInput(HM)." end
+	if not success then return false,"Can not find RegisterAccountEnter(HM)." end
 	mSleep(500)
 
 	screen.tap(target["注册账号输入框"])
@@ -140,6 +140,11 @@ function HMSDK.login(account, password, register, timeoutTarget)
 	local success,errMsg = 0,0
 	
 	screen.pushTargetList(target)
+	
+	local list = {"标识符"}
+	if timeoutTarget then
+		list[2] = timeoutTarget
+	end
 	
 	loop.waitShow("标识符", 10000/500, 500)
 	

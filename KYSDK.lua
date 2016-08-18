@@ -103,7 +103,9 @@ local target = {}
 
 local function _login(account, password)
 	-- ====== 用户名 ======
-	screen.tap(target["登录账号输入框"])
+	local success = screen.safeTap(target["登录账号输入框"])
+	if not success then return false,"Can not find LoginAccountInput(KY)." end
+	
 	mSleep(1000)
 	clearText(20)
 	mSleep(500)
@@ -125,7 +127,9 @@ end
 
 local function _register(account, password)
 	-- ====== 进入口 ======
-	screen.tap(target["注册入口按钮"])
+	screen.safeTap(target["注册入口按钮"])
+	if not success then return false,"Can not find RegisterEnter(KY)." end
+	
 	mSleep(500)
 	
 	screen.tap(target["账号注册"])
@@ -150,17 +154,15 @@ local function _register(account, password)
 	loop.waitShow(target["悬浮按钮"])
 end
 
-function KYSDK.login(account, password, register, timeoutTarget)
-	if register == nil then register = false end
+local function _enter(account, password, register, timeoutTarget)
 	
-	screen.pushTargetList(target)
-	
-	loop.doUntilTrue(function ()
+	-- -------------------- 取消自动登录 ------------------------
+	local success = loop.doUntilTrue(function ()
 		screen.tap("自动登录-取消")
 	end, function ()
 		return screen.find("登录账号输入框")
 	end, 100, 5)
-	
+
 	--[[
 	local res = loop.waitShow(target["自动登录"], 500, 1)
 	if res then
@@ -172,13 +174,30 @@ function KYSDK.login(account, password, register, timeoutTarget)
 	screen.tap(target["自动登录-取消"])
 	mSleep(1000)
 	]]
-	if register then
-		_register(account, password)
-	else
-		_login(account, password)
+	
+	if not success then 
+		return false,"Can not tap CancelAutoLogin(KY)."
 	end
 	
+	-- --------------------- 开始登录 ---------------------------
+	
+	if register then
+		return _register(account, password)
+	else
+		return _login(account, password)
+	end
+end
+
+function KYSDK.login(account, password, register, timeoutTarget)
+	if register == nil then register = false end
+	
+	screen.pushTargetList(target)
+	
+	local res,errMsg = _enter(account, password, register, timeoutTarget)
+	
 	screen.popTargetList(target)
+	
+	return res,errMsg
 end
 
 	local temp = {}

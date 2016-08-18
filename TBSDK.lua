@@ -126,7 +126,9 @@ local target = {}
 local function _login(account, password)
 	--local target = TBSDK.target
 	-- ====== 用户名 ======
-	screen.tap(target["登录账号输入框"])
+	local success = screen.safeTap(target["登录账号输入框"])
+	if not success then return false,"Can not find LoginAccountInput(TB)." end
+	
 	mSleep(1000)
 	clearText(20)
 	mSleep(500)
@@ -155,17 +157,14 @@ end
 local function _register(account, password)
 	--local target = TBSDK.target
 	-- ====== 进入口 ======
-	toast("注册入口按钮")
-	local res = screen.tap(target["注册入口按钮"])
-	toast(tostring(res))
+	local success = screen.tap(target["注册入口按钮"])
+	if not success then return false,"Can not find RegisterAccountEnter(TB)." end
+	
 	mSleep(2000)
 	
-	toast("账号注册")
 	res = screen.tap(target["账号注册"])
-	toast(tostring(res))
 	mSleep(1000)
 
-	toast("注册账号输入框")
 	screen.tap(target["注册账号输入框"])
 	mSleep(1000)
 	clearText(20)
@@ -179,7 +178,6 @@ local function _register(account, password)
 	inputText(password)
 	mSleep(500)
 	
-	toast("重复密码输入框")
 	screen.tap(target["重复密码输入框"])
 	mSleep(1000)
 	clearText(20)
@@ -187,23 +185,20 @@ local function _register(account, password)
 	mSleep(500)
 	
 
-	toast("注册按钮")
 	screen.tap(target["注册按钮"])
 	mSleep(1000)
 	
 	local res = loop.waitShowOne(target["网络不通畅，请检查后再试"], target["跳过验证按钮"])
 	if not res then
-		return false, "wait register timeout."
+		return false, "Wait register timeout."
 	elseif res == 1 then
-		return false, "register error: Alert(\"网络不通畅，请稍候再试\")"
+		return false, "Register error: Alert(\"网络不通畅，请稍候再试\")"
 	end
 	
-	toast("跳过验证按钮")
 	loop.waitShow(target["跳过验证按钮"])
 	screen.tap(target["跳过验证按钮"])
 	mSleep(3000)
 
-	toast("关闭平台消息")
 	screen.safeTap(target["关闭平台消息"])
 	mSleep(500)
 	return true,nil

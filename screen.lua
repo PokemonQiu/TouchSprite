@@ -218,7 +218,8 @@ end
 local function _tableName2TableTarget(tableName)
 	local targetList = screen.topTargetList()
 	if type(targetList) ~= "table" then
-		dialog("Can not find table: ["..tableName.."]", 3)
+		dialog("Can not find table: ["..tableName.."]", 2)
+		mSleep(2000)
 		return nil
 	end
 	return targetList[tableName]

@@ -67,145 +67,72 @@ local target = {}
 			NV_Item_Back.position.x = 100
 			NV_Item_Back.position.y = 125
 	target["导航-返回"] = NV_Item_Back
-
-local function _changeHTTPDelegate(address, port)
 	
+local function __changeHTTPDelegate(address, port)
 	local success = false
 	
-	--[[
-	openURL("prefs:root=TWITTER")
-	mSleep(1000)
-	]]
+	cleanProgress()
 	openURL("prefs:root=WIFI")
 	init("0", 0)
-	mSleep(5000)
-
-	success = loop.whileFalseToDo(function ()
-		return screen.find(target["选中的WIFI"])
-	end, function ()
-		mSleep(2000)
-	end, 5, 1000)
-	if not success then return false,"Can not find selected wifi item." end
-
-	screen.safeTap(target["选中的WIFI"])
-	mSleep(2000)
 	
-	local tableList = {target["代理-关闭状态下的手动位置"], target["代理-手动状态下的手动位置"], target["代理-自动状态下的自动位置"]}
-	success = loop.doUntilTrue(function ()
-		screen.slideDown()
-	end, function ()
-		return screen.selecte(tableList) ~= 0
-	end, 3, 0)
-	if not success then return false,"Can not find wifi delegate settings" end
-	--screen.slideDown()
-
-	mSleep(2000)
-	local selected = screen.selecte(tableList)
-	if selected ~= 2 then
-		screen.safeTap(tableList[selected])
-	end
-	mSleep(1000)
-	screen.slideDown()
-	mSleep(1000)
-	
-	
-	screen.safeTap(target["端口标题"])
-	mSleep(1500)
-	clearText(8)
-	mSleep(1500)
-	inputText(tostring(port))
-	mSleep(1500)
-
-	screen.safeTap(target["服务器标题"])
-	mSleep(1500)
-	clearText(15)
-	mSleep(1500)
-	inputText(address)
-	mSleep(1500)
-
-
-	screen.tap(target["导航-返回"])
-	mSleep(1000)
-	return true,nil
-end
-
-local function _closeHTTPDelegate()
-	local success = false
-	
-	--[[
-	openURL("prefs:root=TWITTER")
-	mSleep(1000)
-	]]
-	openURL("prefs:root=WIFI")
-	init("0", 0)
-	mSleep(5000)
-
-	success = loop.whileFalseToDo(function ()
-		return screen.find(target["选中的WIFI"])
-	end, function ()
-		mSleep(2000)
-	end, 5, 1000)
-	if not success then return false,"Can not find selected wifi item." end
-
-	screen.safeTap(target["选中的WIFI"])
-	mSleep(2000)
-	
-	local tableList = {target["代理-关闭状态下的关闭位置"], target["代理-手动状态下的关闭位置"], target["代理-自动状态下的关闭位置"]}
-	success = loop.doUntilTrue(function ()
-		screen.slideDown()
-	end, function ()
-		return screen.selecte(tableList) ~= 0
-	end, 3, 0)
-	if not success then return false,"Can not find wifi delegate settings" end
-	--screen.slideDown()
-
-	mSleep(2000)
-	local selected = screen.selecte(tableList)
-	if selected ~= 1 then
-		screen.safeTap(tableList[selected])
-	end
-	mSleep(1000)
-	screen.tap(target["导航-返回"])
-	return true,nil
-end
-
-local function __closeHTTPDelegate()
-	local success = false
-	
-	--[[
-	openURL("prefs:root=TWITTER")
-	mSleep(1000)
-	]]
-	openURL("prefs:root=WIFI")
-	init("0", 0)
-	mSleep(5000)
-
-	success = loop.whileFalseToDo(function ()
-		return screen.find("选中的WIFI")
-	end, function ()
-		mSleep(2000)
-	end, 5, 1000)
-	if not success then return false,"Can not find selected wifi item." end
-
+	success = loop.waitShow("选中的WIFI")
+	if not success then return false,"[WIFI]:Can not find the item selected." end
+	mSleep(4000)
 	screen.safeTap("选中的WIFI")
 	mSleep(2000)
 	
-	local tableList = {"代理-关闭状态下的关闭位置", "代理-手动状态下的关闭位置", "代理-自动状态下的关闭位置"}
-	success = loop.doUntilTrue(function ()
-		screen.slideDown()
-	end, function ()
+	-- ------------------------ 选择一个对象列表（打开代理的列表，关闭代理的列表） ------------------------
+	local tableList,targetIndex = {},0
+	if address and port then
+		tableList = {"代理-关闭状态下的手动位置", "代理-手动状态下的手动位置", "代理-自动状态下的手动位置"}
+		targetIndex = 2
+	else
+		tableList = {"代理-关闭状态下的关闭位置", "代理-手动状态下的关闭位置", "代理-自动状态下的关闭位置"}
+		targetIndex = 1
+	end
+	
+	-- ----------------------------------------- 下滑直到显示列表 -----------------------------------------
+	success = loop.whileFalseToDo(function ()
 		return screen.selecte(tableList) ~= 0
-	end, 3, 0)
-	if not success then return false,"Can not find wifi delegate settings" end
-	--screen.slideDown()
-
-	mSleep(2000)
+	end, screen.slideDown, 3, 0)
+	if not success then return false,"[WIFI]:Can not find wifi delegate settings." end
+	
+	-- 选择列表
 	local selected = screen.selecte(tableList)
-	if selected ~= 1 then
+	if selected ~= targetIndex then
 		screen.safeTap(tableList[selected])
 	end
-	mSleep(1000)
+	mSleep(500)
+	
+	-- ---------------------------------- 修改代理部分（关闭代理则跳过） ----------------------------------
+	if targetIndex == 2 then
+		local success = loop.whileFalseToDo(function ()
+			return screen.safeTap("端口标题")
+		end, screen.slideDown, 3, 10)
+		--[[
+		screen.slideDown()
+		mSleep(500)
+		
+		local success = screen.safeTap(target["端口标题"])]]
+		if not success then return false,"[WIFI]:Can not find PortTitle." end
+		mSleep(1500)
+		clearText(8)
+		mSleep(1500)
+		inputText(tostring(port))
+		mSleep(1500)
+		
+		local success = screen.safeTap(target["服务器标题"])
+		if not success then return false,"[WIFI]:Can not find ServerTitle." end
+		mSleep(1500)
+		clearText(15)
+		mSleep(1500)
+		inputText(address)
+		mSleep(1500)
+	end
+	
+	-- ----------------------------------------- 按下返回完成设置 -----------------------------------------
 	screen.tap("导航-返回")
+	mSleep(1000)
 	return true,nil
 end
 
@@ -213,13 +140,9 @@ function WIFI.changeHTTPDelegate(address, port)
 	local success,errMsg = 0,0
 	
 	screen.pushTargetList(target)
-	if not address then
-		local IDFA = require "IDFA"
-		IDFA.newRefreshIDFA()
-		success,errMsg = __closeHTTPDelegate()
-	else
-		success,errMsg = _changeHTTPDelegate(address, port)
-	end
+	
+	success,errMsg = __changeHTTPDelegate(address, port)
+	
 	screen.popTargetList()
 	
 	return success,errMsg

@@ -59,35 +59,50 @@ function IDFA.refreshIDFA()
 	toast("end")
 end
 
-function IDFA.newRefreshIDFA()
-	screen.pushTargetList(target)
-	
+local function _refreshIDFA()
+	local success
 	openURL("prefs:root=Privacy")
 	mSleep(1000)
-	loop.doUntilTrue(screen.slideDown, function ()
+	success = loop.doUntilTrue(screen.slideDown, function ()
 		return screen.find("广告")
-	end)
+	end, 5, 100)
+	if not success then return false,"Can not find [隐私 - 广告]." end
+
 	screen.safeTap("广告")
-	mSleep(2000)
-	if screen.find("开关关") then
-		local point = screen.find("开关关")
-		mSleep(3000)
+	mSleep(1000)
+	
+	local point = screen.find("开关关")
+	if point then
 		_clickSwitch(point)
+		loop.doUntilTrue(function ()
+			mSleep(1000)
+		end, function ()
+			return screen.find("开关开")
+		end)
 	end
-	loop.doUntilTrue(function ()
-		mSleep(1000)
-	end, function ()
-		return screen.find("开关开")
-	end)
+	
 	_clickSwitch(screen.find("开关开"))
-	loop.doUntilTrue(function ()
+	
+	success = loop.doUntilTrue(function ()
 		mSleep(1000)
 	end, function ()
 		return screen.find("开关关")
-	end)
-	toast("end")
+	end, 60, 500)
+	if not success then return false,"[IDFA]:Wait result time out." end
+	
+	return true,nil
+end
+
+function IDFA.newRefreshIDFA()
+	screen.pushTargetList(target)
+	
+	local res,errMsg = _refreshIDFA()
 	
 	screen.popTargetList()
+	
+	return res,errMsg
 end
+
+IDFA.newRefreshIDFA()
 
 return IDFA
